@@ -7,7 +7,7 @@ import { ArrowDown, ArrowUp, Download } from "lucide-react";
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
-
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 function DocumentViewer() {
   const [pages, setPages] = useState(null);
@@ -102,26 +102,44 @@ function DocumentViewer() {
   return (
     <div className="relative min-h-screen p-4">
       {/* Scrollable container */}
-      <div className="overflow-y-scroll max-h-[80vh] border border-gray-200 w-2/3 mx-auto p-4">
-        <Document
-          file={document.pdfUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          className="mx-auto"
+      <div className="overflow-y-scroll max-h-[80vh] border border-gray-200 w-full md:w-2/3 mx-auto p-4">
+        <TransformWrapper
+          // Disable zoom on scroll, only allow it on buttons or touch gestures
+          options={{
+            limitToBounds: true,
+            maxScale: 3,
+            minScale: 0.5,
+            centerContent: true,
+            wheel: {
+              disabled: true, // Disable zoom on scroll wheel
+            },
+            pinch: {
+              step: 5, // Adjust pinch zoom sensitivity
+            },
+          }}
         >
-          {/* Render all pages for scrolling */}
-          {Array.from(new Array(pages), (el, index) => (
-            <div ref={pageRefs.current[index]} key={`page_${index + 1}`}>
-              <Page
-                pageNumber={index + 1}
-                scale={scale}
-                width={window.innerWidth * 0.6} // Adjust for responsiveness
-              />
-            </div>
-          ))}
-        </Document>
+          <TransformComponent>
+            <Document
+              file={document.pdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              className="mx-auto"
+            >
+              {/* Render all pages for scrolling */}
+              {Array.from(new Array(pages), (el, index) => (
+                <div ref={pageRefs.current[index]} key={`page_${index + 1}`}>
+                  <Page
+                    pageNumber={index + 1}
+                    scale={scale}
+                    width={window.innerWidth * 0.6} // Adjust for responsiveness
+                  />
+                </div>
+              ))}
+            </Document>
+          </TransformComponent>
+        </TransformWrapper>
       </div>
 
-      <div className="bg-blue-600 fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-2 flex gap-4 rounded-full">
+      <div className="bg-blue-600 fixed bottom-4 left-1/2 transform -translate-x-1/2 px-4 py-1 flex gap-4 md:w-2/3 w-full justify-center rounded-full">
         {/* Page navigation */}
         <div className="flex items-center gap-2">
           <button
